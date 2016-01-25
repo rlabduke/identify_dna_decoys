@@ -48,8 +48,9 @@ def run(args) :
   hs = 'A file path for output, defaults to stdout'
   parser.add_argument('-o','--out_file_name',help=hs)
   hs = 'Write out sample points in kinemage format'
-  parser.add_argument('-k','--write_kin',help=hs)
-  parser.add_argument('--keep_files',help='Keep generated pdb files')
+  parser.add_argument('-k','--write_kin',help=hs,action='store_true')
+  parser.add_argument('--keep_files',help='Keep generated pdb files',
+                      action='store_true')
   args = parser.parse_args()
   # does the provided pdb_id match the expexted PDB code format?
   es = 'The PDB code provided doesn\'t match the expexted PDB code format.'
@@ -83,8 +84,6 @@ def run(args) :
   ddab.write_potential_decoy_summary()
 
   if args.out_file_name : log.close()
-
-  print 'success'
 
 if __name__ == '__main__' :
   run(sys.argv[1:])

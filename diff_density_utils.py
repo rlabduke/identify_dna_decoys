@@ -43,9 +43,32 @@ maps {
     mtz_label_phases = PHANOM
   }
   map {
-    map_type = 2mFo-DFc
+    map_type = mFo-DFc
+    format = xplor *ccp4
+    file_name = None
     fill_missing_f_obs = False
     grid_resolution_factor = 1/4.
+    region = *selection cell
+    atom_selection = None
+    atom_selection_buffer = 3
+    sharpening = False
+    sharpening_b_factor = None
+    exclude_free_r_reflections = False
+    isotropize = True
+  }
+  map {
+    map_type = 2mFo-DFc
+    format = xplor *ccp4
+    file_name = None
+    fill_missing_f_obs = False
+    grid_resolution_factor = 1/4.
+    region = *selection cell
+    atom_selection = None
+    atom_selection_buffer = 3
+    sharpening = False
+    sharpening_b_factor = None
+    exclude_free_r_reflections = False
+    isotropize = True
   }
 }
 """
@@ -156,6 +179,14 @@ class GetMapCoeffs(refinement_base):
     fmodel_info.show_rfactors_targets_scales_overall(out = log)
     print >> log, "-"*79
     print >> log, "Compute maps."
+    file_name_base = params.maps.input.pdb_file_name
+    xplor_maps = mmtbx.maps.compute_xplor_maps(
+      fmodel                 = fmodel,
+      params                 = params.maps.map,
+      atom_selection_manager = atom_selection_manager,
+      file_name_prefix       = None,
+      file_name_base         = file_name_base,
+      pdb_hierarchy          = pdb_hierarchy)
     cmo = mmtbx.maps.compute_map_coefficients(
       fmodel = fmodel,
       params = params.maps.map_coefficients,
