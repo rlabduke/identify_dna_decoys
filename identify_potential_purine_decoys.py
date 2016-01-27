@@ -19,20 +19,33 @@ def get_sample_points_kin(bases,positive_threshold,negative_threshold) :
 
   return kin
 
+def format_desc(desc) :
+  lines = []
+  ns = ''
+  ts = ''
+  paras = desc.split("\n\n")
+  for para in paras :
+    ts = ''
+    ls = para.split(" ")
+    for i,word in enumerate(ls) :
+      ts += word + ' '
+      if len(ts) > 70 or i == len(ls) - 1 :
+        lines.append(ts[:ts.rfind(" ")])
+        ts = ts[ts.rfind(" ") + 1:]
+    lines.append("")
+  return '\n'.join(lines)
+
 def run(args) :
   # defaults
   pos_thresh = 3
   neg_thresh = -3
   n_points = 4
   # process args
-  desc = "This program identifies potential purine decoys in DNA. In this "
-  desc+= "context, a purine decoy is one that may need to switch from anti to "
-  desc+= "cis or vise vesa. A potential decoy is identified by having "
-  desc+= "difference density peaks in expected locations around the purine. "
-  desc+= "If you're thinking that a desciption of those locations should be "
-  desc+= "included right here, you're correct - go shame Bradley about not "
-  desc+= "completing this program description properly." 
-  parser = argparse.ArgumentParser(description=desc)
+  desc = "This program identifies potential purine decoys in DNA. In this context, a purine decoy is one that may need to switch from anti to cis or vise vesa. A potential decoy is identified by having difference density peaks in expected locations around the purine. We look for difference ensity peaks around 5  expecte coordiniates. The expected locations for negative peaks are near the atoms N1, C2 (both on the WC edge), and C8 (opposite the WC edge). The expected location for positive peaks are near C4 and N7 but out from the base, in the plane thereof.\n\nAfter identifying which of the 5 expected coordiniates have difference density near them (if any), we categorize the potential decoy into 1 of three strength category. Super strong decoy candidates have a negative peak near C8 and 2 additional peaks. Strong decoy candidates are not super strong that have either  positive peaks near BOTH positive expected coordinates (near C4 and N7 but out from the base) OR has at least three of the five ponts with peaks near by. Weak decoys has at least two of the five ponts with peaks near by. "
+
+
+  parser = argparse.ArgumentParser(description=format_desc(desc),
+                                 formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('pdb_id', help='A PDB code')
   hs = 'The %s sigma value where difference density points at or %s '
   hs+= 'than that value will be flagged as %s peaks. Default = %i'
@@ -51,6 +64,8 @@ def run(args) :
   parser.add_argument('-k','--write_kin',help=hs,action='store_true')
   parser.add_argument('--keep_files',help='Keep generated pdb files',
                       action='store_true')
+  hs = 'Keep output simple'
+  parser.add_argument('--simple_out',help=hs,action='store_true')
   args = parser.parse_args()
   # does the provided pdb_id match the expexted PDB code format?
   es = 'The PDB code provided doesn\'t match the expexted PDB code format.'
@@ -81,7 +96,7 @@ def run(args) :
   # write summary of diffence poits to stdout
   ddab.set_potential_decoys()
   if not args.keep_files : ddab.clean_up_files()
-  ddab.write_potential_decoy_summary()
+  if not args.simple_out : ddab.write_potential_decoy_summary()
 
   if args.out_file_name : log.close()
 
