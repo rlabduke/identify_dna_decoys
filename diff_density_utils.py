@@ -434,9 +434,14 @@ class DiffDensityAroundBases(object) :
     print >> log, ' End Decoy summary '.center(79,'*')
 
   # clean up files
-  def clean_up_files(self) :
+  def clean_up_files(self,except_these=[]) :
     assert len(self.pdb_id) == 4 and self.pdb_id.isalnum()
-    libtbx.easy_run.fully_buffered('rm %s*' % self.pdb_id)
+    cwd = os.getcwd()
+    ld = os.listdir(cwd)
+    onlyfiles = [f for f in ld if os.path.isfile(os.path.join(cwd, f))]
+    for f in onlyfiles :
+      if not f.startswith(self.pdb_id) or f in except_these : continue
+      libtbx.easy_run.fully_buffered('rm %s' % f)
 
 class SimpleBaseClass(object) :
 

@@ -78,6 +78,7 @@ def run(args) :
 
   # set log
   if args.out_file_name :
+    print "#"*21,args.out_file_name
     log = open(args.out_file_name,'w')
   else : log = sys.stdout
 
@@ -94,9 +95,9 @@ def run(args) :
     fle.close()
 
   # write summary of diffence poits to stdout
-  ddab.set_potential_decoys()
-  if not args.keep_files : ddab.clean_up_files()
-  if not args.simple_out : ddab.write_potential_decoy_summary()
+  ddab.set_potential_decoys(log=log)
+  if not args.keep_files: ddab.clean_up_files(except_these=[args.out_file_name])
+  if not args.simple_out : ddab.write_potential_decoy_summary(log=log)
 
   if args.out_file_name : log.close()
 
