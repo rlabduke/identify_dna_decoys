@@ -51,10 +51,10 @@ def run(args) :
   hs+= 'than that value will be flagged as %s peaks. Default = %i'
   parser.add_argument('-p','--positive_threshold',
                       help=hs % ('positive','greater','positive',pos_thresh),
-                      type=int,default=pos_thresh)
+                      type=float,default=pos_thresh)
   parser.add_argument('-n','--negative_threshold',
                       help=hs % ('negative','less','negative',neg_thresh),
-                      type=int,default=neg_thresh)
+                      type=float,default=neg_thresh)
   hs = 'The smallest number of adjacent difference density sample points '
   hs+= 'to be considered a difference density peak'
   parser.add_argument('-s','--point_n',help=hs,type=int,default=n_points)
