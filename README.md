@@ -28,7 +28,8 @@ Running this :
 
   $ phenix.python identify_potential_purine_decoys.py 3jxb --keep_files
 
-```Should provide this output :
+```
+Should provide this output :
 ************************************ Decoys ***********************************
 PDB : 3jxb    Resolution : 1.67014746437
 PARAMETERS
