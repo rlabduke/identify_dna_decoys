@@ -242,7 +242,7 @@ class DiffDensityAroundBases(object) :
             if residue.resname.strip() in ['DA','DT','DC','DG'] :
               b = SimpleBaseClass(chain.id, residue, conformer.altloc,
                 self.mc.resolution_range[1] )
-              self.dna_bases.append(b)
+              if b.has_all_atoms() : self.dna_bases.append(b)
 
   def get_miller_arrays_3dmap(self) :
     args = [self.mc.map_coeff_file_name,self.mc.pdb_file, 'label=FOFCWT']
@@ -457,7 +457,7 @@ class SimpleBaseClass(object) :
     self.xyz = group_args()
     self.density_sample_points = DensitySamplePoints()
     self.set_atoms_xyz(residue)
-    self.set_sample_points()
+    if self.has_all_atoms() : self.set_sample_points()
 
   def is_purine(self) :
     if self.res_type.upper() in ['DA','DG'] : return True
@@ -485,10 +485,20 @@ class SimpleBaseClass(object) :
       elif atom.name.strip() in atom_names :
         vars(self.xyz)[atom.name.strip().upper()] = atom.xyz
 
+  def has_all_atoms(self) :
+    rn = self.res_type.strip().upper()
+    if rn in ['DA', 'DG'] :
+      for an in ['C2','N1','C6'] :
+        if not hasattr(self.xyz,an) : return False
+    elif rn in ['DT', 'DC'] :
+      for an in ['C4','N3','C5'] :
+        if not hasattr(self.xyz,an) : return False
+    return True
+
   def set_sample_points(self, sample_factor = 1./4) :
     sample_spacing = sample_factor*self.resolution
     base = {}
-#     print self.get_string_id()
+    #print self.get_string_id()
     rn = self.res_type.strip().upper()
     if rn in ['DA', 'DG'] :
       base['C2'] = self.xyz.C2
