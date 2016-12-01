@@ -274,11 +274,11 @@ def get_points_around_base(base,base_type,sample_spacing) :
   return sample_points
 
 def run(args) :
-  mtz_file, pdb_file = None, None
-  for arg in args :
-    if arg.endswith('.pdb') : pdb_file = arg
-    elif arg.endswith('.mtz') : mtz_file = arg
-  assert pdb_file != None, 'pdb file not provided'
+  #mtz_file, pdb_file = None, None
+  #for arg in args :
+  #  if arg.endswith('.pdb') : pdb_file = arg
+  #  elif arg.endswith('.mtz') : mtz_file = arg
+  #assert pdb_file != None, 'pdb file not provided'
   #assert mtz_file != None, 'mtz file not provided'
   da_base = {}
   da_base['C2'] = (1.424,-58.286,-15.808)
@@ -309,11 +309,12 @@ def run(args) :
   # box_base(dc_base,'C')
 
   dt_base = {}
-  dt_base['n3'] = (39.371,-19.689,-10.449)
-  dt_base['c4'] = (38.958,-18.852,-9.427)
-  dt_base['c5'] = (39.641,-19.035,-8.165)
-  #box_base(dt_base,'T')
-  
+  dt_base['N3'] = (-4.021,-12.752,-1.005)
+  dt_base['C4'] = (-3.701,-11.416,-1.202)
+  dt_base['C5'] = (-4.672,-10.475,-0.689)
+  points = get_points_around_base(dt_base,'DT',1.9*0.25)
+  print '@kinemage'
+  print get_kin_balls(points,color='white')
 
 if __name__ == '__main__' :
   run(sys.argv[1:])
