@@ -198,23 +198,29 @@ class TestPoints(object) :
 
 def get_test_points(base,base_type,sample_spacing) :
   p1,p2,p3,p4 = box_base(base,base_type)
-  # point 1
-  over_scale = 1.75
-  up_scale = 5.5
-  up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
-  up_vec = translate_vector(up_vec_scaled, p4)
-  over_vec_scaled = get_scaled_vector_on_line(p2, p1, over_scale)
-  point_1 = translate_vector(over_vec_scaled, up_vec)
-#   print kin_vector_list([p4,up_vec,point_1],'green')
-  # point 2
-  over_scale = 3.5
-  up_scale = 1.25
-  up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
-  up_vec = translate_vector(up_vec_scaled, p4)
-  over_vec_scaled = get_scaled_vector_on_line(p3, p4, over_scale)
-  point_2 = translate_vector(over_vec_scaled, up_vec)
-#   print kin_vector_list([p4,up_vec,point_2],'green')
-  
+  if base_type in ['DA','DG'] :
+    # point 1
+    over_scale = 1.75
+    up_scale = 5.5
+    up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
+    up_vec = translate_vector(up_vec_scaled, p4)
+    over_vec_scaled = get_scaled_vector_on_line(p2, p1, over_scale)
+    point_1 = translate_vector(over_vec_scaled, up_vec)
+#     print kin_vector_list([p4,up_vec,point_1],'green')
+    # point 2
+    over_scale = 3.5
+    up_scale = 1.25
+    up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
+    up_vec = translate_vector(up_vec_scaled, p4)
+    over_vec_scaled = get_scaled_vector_on_line(p3, p4, over_scale)
+    point_2 = translate_vector(over_vec_scaled, up_vec)
+#     print kin_vector_list([p4,up_vec,point_2],'green')
+  elif base_type in ['DT','DC'] :
+    pass
+  else :
+    msg = "WARNING : WTF man. I dont uderstand the base : %s" % base_type
+    print >> sys.stderr, msg
+
   return TestPoints(point_1, point_2)
 
 def get_points_around_base(base,base_type,sample_spacing) :

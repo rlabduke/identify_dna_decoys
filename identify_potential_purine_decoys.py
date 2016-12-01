@@ -88,10 +88,10 @@ def run(args) :
                                 count_threshold = args.point_n)
 
   if args.write_kin :
-    fn = 'sample_points_%s.kin' % pdb_id
+    fn = 'sample_points_%s.kin' % args.pdb_id
     fle = open(fn,'w')
-    fle.write(get_sample_points_kin(ddab.dna_bases, positive_threshold,
-                                              negative_threshold))
+    fle.write(get_sample_points_kin(ddab.dna_bases,args.positive_threshold,
+                                                   args.negative_threshold))
     fle.close()
 
   # write summary of diffence poits to stdout
