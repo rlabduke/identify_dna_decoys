@@ -60,6 +60,8 @@ def run(args) :
   parser.add_argument('-s','--point_n',help=hs,type=int,default=n_points)
   hs = 'A file path for output, defaults to stdout'
   parser.add_argument('-o','--out_file_name',help=hs)
+  hs = 'Decoy type: HG (hoogsteen) or RY (pur/pyr mismatch'
+  parser.add_argument('-t','--decoy_type',help=hs,default="HG")
   hs = 'Write out sample points in kinemage format'
   parser.add_argument('-k','--write_kin',help=hs,action='store_true')
   parser.add_argument('--keep_files',help='Keep generated pdb files',
@@ -74,6 +76,7 @@ def run(args) :
   assert args.positive_threshold > 0,'positive_threshold must be > 0'
   assert args.negative_threshold < 0,'negative_threshold must be < 0'
   assert args.point_n > 2, 'ponit_n must be > 2'
+  assert args.decoy_type in ['HG','RY']
   # end process args
 
   # set log
@@ -95,9 +98,12 @@ def run(args) :
     fle.close()
 
   # write summary of diffence poits to stdout
-  ddab.set_potential_decoys(log=log)
+
+  if args.decoy_type == 'HG' :  ddab.set_potential_decoys(log=log)
+  else : ddab.set_potential_RY_decoys(log=log)
   if not args.keep_files: ddab.clean_up_files(except_these=[args.out_file_name])
-  if not args.simple_out : ddab.write_potential_decoy_summary(log=log)
+  if not args.simple_out :
+    ddab.write_potential_decoy_summary(args.decoy_type,log=log)
 
   if args.out_file_name : log.close()
 

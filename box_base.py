@@ -110,12 +110,15 @@ def kin_vector_list(points,color='cyan',group_name='new vector') :
     kin += '\n'
   return kin
 
-def get_kin_balls(points,color='cyan',group_name='points') :
+def ponit_line(id,x,y,z) :
+  return  '{%s} P %.3f %.3f %.3f' % (id,x,y,z)
+
+def get_kin_balls(points,color='cyan',group_name='points',radius=0.02) :
   kin = '@group {%s} dominant\n' % group_name
-  kin += '@balllist {wtf} color= %s radius = 0.02\n' % color
+  kin += '@balllist {wtf} color= %s radius = %.2f\n' % (color,radius)
   for k,v in points.items() :
     id = '%s %s %s' % k
-    kin += '{%s} P %.3f %.3f %.3f\n' % (id,v[0],v[1],v[2])
+    kin += ponit_line(id,v[0],v[1],v[2]) + '\n'
   return kin
 
 def box_base(base,base_type) :
@@ -133,7 +136,7 @@ def box_base(base,base_type) :
     for e in ['N3','C4','C5'] :
       assert e in base.keys()
     dist_from_a2_a3 = 2.5
-    side1_scale = 6
+    side1_scale = 8
     side2_scale = 7
     atom_1 = base['N3']
     atom_2 = base['C4']
@@ -192,9 +195,10 @@ def get_scaled_vector_on_line(pA, pB, scale) :
   return scale_vector(vec_unit,scale)
 
 class TestPoints(object) :
-  def __init__(self, point_1, point_2) :
+  def __init__(self, point_1, point_2, point_3 = None) :
     self.point_1 = point_1
     self.point_2 = point_2
+    self.point_3 = point_3
 
 def get_test_points(base,base_type,sample_spacing) :
   p1,p2,p3,p4 = box_base(base,base_type)
@@ -215,13 +219,36 @@ def get_test_points(base,base_type,sample_spacing) :
     over_vec_scaled = get_scaled_vector_on_line(p3, p4, over_scale)
     point_2 = translate_vector(over_vec_scaled, up_vec)
 #     print kin_vector_list([p4,up_vec,point_2],'green')
+    point_3 = None
   elif base_type in ['DT','DC'] :
-    pass
+    # point 1
+    over_scale = 1
+    up_scale = 5.8
+    up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
+    up_vec = translate_vector(up_vec_scaled, p4)
+    over_vec_scaled = get_scaled_vector_on_line(p2, p1, over_scale)
+    point_1 = translate_vector(over_vec_scaled, up_vec)
+#     print kin_vector_list([p4,up_vec,point_1],'green')
+    # point 2
+    over_scale = 3.3
+    up_scale = 6
+    up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
+    up_vec = translate_vector(up_vec_scaled, p4)
+    over_vec_scaled = get_scaled_vector_on_line(p3, p4, over_scale)
+    point_2 = translate_vector(over_vec_scaled, up_vec)
+#     print kin_vector_list([p4,up_vec,point_2],'green')
+    over_scale = 3.1
+    up_scale = 1.4
+    up_vec_scaled = get_scaled_vector_on_line(p1, p4, up_scale)
+    up_vec = translate_vector(up_vec_scaled, p4)
+    over_vec_scaled = get_scaled_vector_on_line(p3, p4, over_scale)
+    point_3 = translate_vector(over_vec_scaled, up_vec)
+#     print kin_vector_list([p4,up_vec,point_2],'green')
   else :
     msg = "WARNING : WTF man. I dont uderstand the base : %s" % base_type
     print >> sys.stderr, msg
 
-  return TestPoints(point_1, point_2)
+  return TestPoints(point_1, point_2, point_3)
 
 def get_points_around_base(base,base_type,sample_spacing) :
   p1,p2,p3,p4 = box_base(base,base_type)
@@ -315,6 +342,12 @@ def run(args) :
   points = get_points_around_base(dt_base,'DT',1.9*0.25)
   print '@kinemage'
   print get_kin_balls(points,color='white')
+  tp = get_test_points(dt_base,'DT',1.9*0.25)
+  ps = {('t','p','1'):tp.point_1,('t','p','2'):tp.point_2,('t','p','3'):tp.point_3}
+  print get_kin_balls(ps,color='red',group_name='tests',radius=0.08)
+  #print ponit_line('point1',tp.point_1[0],tp.point_1[1],tp.point_1[2])
+  #print ponit_line('point2',tp.point_2[0],tp.point_2[1],tp.point_2[2])
+  #print ponit_line('point3',tp.point_3[0],tp.point_3[1],tp.point_3[2])
 
 if __name__ == '__main__' :
   run(sys.argv[1:])

@@ -303,12 +303,54 @@ class DiffDensityAroundBases(object) :
           print >> log, '        Peaks adjacent to %s : %i ' % (a,len(pa))
     print >> log, '*'*32 + '  End summary  ' + '*'*32
 
+  def write_potential_log(self,test_radii=1,decoy_type='HG',log=sys.stderr) :
+    assert decoy_type in ['HG','RY'], decoy_type
+    print >> log, '*'*34 + ' %s Decoys ' % decoy_type + '*'*35
+    pdbres = 'PDB : %s    Resolution : %s'
+    print >> log, pdbres % (self.pdb_id,self.resolution)
+    print >> log, 'PARAMETERS'
+    print >> log, '  positive_threshold : %s' % self.positive_threshold
+    print >> log, '  negative_threshold : %s' % self.negative_threshold
+    print >> log, '  count_threshold : %s' % self.count_threshold
+    print >> log, '  test_radii : %s' % test_radii
+    print >> log, '*'*12 + ' BASES ' + '*'*12
+
+
+  def set_potential_RY_decoys(self, test_radii = 1, log=sys.stderr) :
+    # This function looks for potential purine-pyrimidine mix ups by ...
+    # Purine test points (apprximate  positions)
+    #
+    #        o--o
+    #       /    \
+    #  y3  o      o  y2
+    #       \    /
+    #        o--o
+    #       /      y1
+    #  sugar
+    #
+    self.RY_decoys = []
+    self.write_potential_log(test_radii,'RY',log)
+    for base in self.dna_bases :
+      ppeaks = base.positive_peaks
+      npeaks = base.negative_peaks
+      if base.is_pyrimidine() :
+        print base.get_string_id()
+        Y1p = [p for p in ppeaks if p.adjacent_to('test_1', test_radii)]
+        Y2p = [p for p in ppeaks if p.adjacent_to('test_2', test_radii)]
+        Y3p = [p for p in ppeaks if p.adjacent_to('test_3', test_radii)]
+        ga = group_args(base     = base,
+                        Y1peaks  = Y1p,
+                        Y2peaks  = Y2p,
+                        Y3peaks  = Y3p)
+        if len(Y1p) > 0 or len(Y2p) > 0 or len(Y3p) > 0 :
+          self.RY_decoys.append(ga)
+
   def set_potential_decoys(self, 
                            test_radii = 1, 
                            N7_radii=1.9, 
                            C4_radii=1.9, 
                            log=sys.stderr) :
-    # This function looks for potential mis-modeled bases by looking for 
+    # This function looks for potential mis-modeled purines by looking for 
     # positive/negative mFo-DFc regions in the following areas : 
     #    - Around test points near N7 and C4 of the purine (positive)
     #    - Around N1, C2, and C8 of the purine (negative)
@@ -327,17 +369,7 @@ class DiffDensityAroundBases(object) :
     # parellel to the base and the planes extend at most 0.7 anstroms above and
     # below the base. This means that a radius of 2 will not catch any peaks
     # 0.7 A or more above or below (relatiive to the base plane) the test points.
-    print >> log, '*'*36 + ' Decoys ' + '*'*35
-    pdbres = 'PDB : %s    Resolution : %s'
-    print >> log, pdbres % (self.pdb_id,self.resolution)
-    print >> log, 'PARAMETERS'
-    print >> log, '  positive_threshold : %s' % self.positive_threshold
-    print >> log, '  negative_threshold : %s' % self.negative_threshold
-    print >> log, '  count_threshold : %s' % self.count_threshold
-#    print >> log, '  N7_radii : %s' % N7_radii
-#    print >> log, '  C4_radii : %s' % C4_radii
-    print >> log, '  test_radii : %s' % test_radii
-    print >> log, '*'*12 + ' BASES ' + '*'*12
+    self.write_potential_log(test_radii,'HG',log)
     self.weak_decoys = []
     self.strong_decoys = []
     self.super_strong_decoys = []
@@ -406,7 +438,7 @@ class DiffDensityAroundBases(object) :
     for NC8p in ga.NC8peaks :
       print >> log, nmsg % ('C8', NC8p.n_sample_points)
 
-  def write_potential_decoy_summary(self, log=sys.stderr) :
+  def write_potential_decoy_summary(self, decoy_type, log=sys.stderr) :
     print >> log, ' Decoys Candidates '.center(79,'*')
     pdbres = 'PDB : %s    Resolution : %s'
     print >> log, pdbres % (self.pdb_id,self.resolution)
@@ -415,23 +447,33 @@ class DiffDensityAroundBases(object) :
     print >> log, '  negative_threshold : %s' % self.negative_threshold
     print >> log, '  count_threshold : %s' % self.count_threshold
     print >> log, ' BASES '.center(40,'*').center(79)
-    pmsg = '   %s positive peak sample points n : %i'
-    nmsg = '   %s negative peak sample points n : %i'
     ns = '\n # of %s decoy candidates : %i '
 
-    print >> log, ns % ('super strong', len(self.super_strong_decoys))
-    for ga in self.super_strong_decoys :
-      self.write_simpe_summary(ga,log)
+    assert decoy_type in["HG","RY"], decoy_type
+    if decoy_type == "HG" :
+      print >> log, ' HG Summary '.center(79,'*')
+      print >> log, ns % ('super strong', len(self.super_strong_decoys))
+      for ga in self.super_strong_decoys :
+        self.write_simpe_summary(ga,log)
 
-    print >> log, ns % ('strong', len(self.strong_decoys))
-    for ga in self.strong_decoys :
-      self.write_simpe_summary(ga,log)
+      print >> log, ns % ('strong', len(self.strong_decoys))
+      for ga in self.strong_decoys :
+        self.write_simpe_summary(ga,log)
 
-    print >> log, ns % ('weak', len(self.weak_decoys))
-    for ga in self.weak_decoys :
-      self.write_simpe_summary(ga,log)
+      print >> log, ns % ('weak', len(self.weak_decoys))
+      for ga in self.weak_decoys :
+        self.write_simpe_summary(ga,log)
 
-    print >> log, ' End Decoy summary '.center(79,'*')
+      print >> log, ' End Decoy summary '.center(79,'*')
+
+    else : 
+      print >> log, ' RY Summary '.center(79,'*')
+      print >> log, 'No Summarry available.'
+      for ga in self.RY_decoys :
+        print >> log, ga.base.get_string_id()
+        print >> log, len(ga.Y1peaks)
+        print >> log, len(ga.Y2peaks)
+        print >> log, len(ga.Y3peaks)
 
   # clean up files
   def clean_up_files(self,except_these=[]) :
@@ -513,6 +555,10 @@ class SimpleBaseClass(object) :
       base['N3'] = self.xyz.C2
       base['C4'] = self.xyz.N1
       base['C5'] = self.xyz.C6
+      tp = box_base.get_test_points(base,rn,sample_spacing)
+      vars(self.xyz)['test_1'] = tp.point_1
+      vars(self.xyz)['test_2'] = tp.point_2
+      vars(self.xyz)['test_3'] = tp.point_3
     self.sample_points = box_base.get_points_around_base(base,rn,sample_spacing)
 
   def get_sample_points_kin_group(self,color='red') :
