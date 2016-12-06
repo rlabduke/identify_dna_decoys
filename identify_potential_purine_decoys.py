@@ -17,6 +17,7 @@ def get_sample_points_kin(bases,positive_threshold,negative_threshold) :
     kin += base.get_density_sample_points_kin_group(positive_threshold,
                                                       negative_threshold)
 
+
   return kin
 
 def format_desc(desc) :
@@ -88,7 +89,8 @@ def run(args) :
   ddab = diff_density_utils.DiffDensityAroundBases(args.pdb_id,
                                 positive_threshold = args.positive_threshold,
                                 negative_threshold = args.negative_threshold,
-                                count_threshold = args.point_n)
+                                count_threshold = args.point_n,
+                                decoy_type = args.decoy_type)
 
   if args.write_kin :
     fn = 'sample_points_%s.kin' % args.pdb_id

@@ -203,12 +203,16 @@ class GetMapCoeffs(refinement_base):
     if (write_mtz_file_result) :
       print >> log, "Map coefficients: %s" % os.path.basename(self.map_coeff_file_name)
 
+import pickle
 class DiffDensityAroundBases(object) :
 
   def __init__(self, pdb_id,  positive_threshold = 3,
                               negative_threshold = -3,
                               count_threshold = 4, 
+                              decoy_type = "HG",
                               log=sys.stderr) :
+    assert decoy_type in ['HG','RY'], decoy_type
+    self.decoy_type = decoy_type
     self.log = log
     self.pdb_id = pdb_id
     self.positive_threshold = positive_threshold
@@ -290,7 +294,7 @@ class DiffDensityAroundBases(object) :
         # atom adjacency info
         for atom in atoms :
           a = atom.name.strip().upper()
-          pa = [peak for peak in ppeaks if peak.adjacent_to(a, adjacency_radius)]
+          pa = [peak for peak in ppeaks if peak.adjacent_to(a,adjacency_radius)]
           print >> log, '        Peaks adjacent to %s : %i ' % (a,len(pa))
       print >> log, '    Negative peaks : %i' % len(npeaks)
       if len(npeaks) > 0 :
@@ -334,7 +338,6 @@ class DiffDensityAroundBases(object) :
       ppeaks = base.positive_peaks
       npeaks = base.negative_peaks
       if base.is_pyrimidine() :
-        print base.get_string_id()
         Y1p = [p for p in ppeaks if p.adjacent_to('test_1', test_radii)]
         Y2p = [p for p in ppeaks if p.adjacent_to('test_2', test_radii)]
         Y3p = [p for p in ppeaks if p.adjacent_to('test_3', test_radii)]
@@ -344,6 +347,17 @@ class DiffDensityAroundBases(object) :
                         Y3peaks  = Y3p)
         if len(Y1p) > 0 or len(Y2p) > 0 or len(Y3p) > 0 :
           self.RY_decoys.append(ga)
+      else :
+        N1p = [n for n in npeaks if n.adjacent_to('N1', test_radii)]
+        N3p = [n for n in npeaks if n.adjacent_to('N3', test_radii)]
+        C2p = [n for n in npeaks if n.adjacent_to('C2', test_radii)]
+        ga = group_args(base     = base,
+                        N1peaks  = N1p,
+                        N3peaks  = N3p,
+                        C2peaks  = C2p)
+        if len(N1p) > 0 or len(C2p) > 0 or len(N3p) > 0 :
+          self.RY_decoys.append(ga)
+
 
   def set_potential_decoys(self, 
                            test_radii = 1, 
@@ -469,11 +483,35 @@ class DiffDensityAroundBases(object) :
     else : 
       print >> log, ' RY Summary '.center(79,'*')
       print >> log, 'No Summarry available.'
+      heads = ['chain_id','res_num','res_type','alt_loc','ins_code']
+      heads+= ['Y1n','Y2n','Y3n','N1n','C2n','N3n']
+      print >> log, ','.join(heads)
+      #print >> log, 'No Summarry available.'
       for ga in self.RY_decoys :
-        print >> log, ga.base.get_string_id()
-        print >> log, len(ga.Y1peaks)
-        print >> log, len(ga.Y2peaks)
-        print >> log, len(ga.Y3peaks)
+        l = [ga.base.chain_id,ga.base.res_num.strip(),ga.base.res_type]
+        l+= [ga.base.alt_loc,ga.base.ins_code.strip()]
+        if ga.base.is_pyrimidine() :
+          Y1n = 0
+          for Y1 in ga.Y1peaks : Y1n += Y1.n_sample_points
+          Y2n = 0
+          for Y2 in ga.Y2peaks : Y2n += Y2.n_sample_points
+          Y3n = 0
+          for Y3 in ga.Y3peaks : Y3n += Y3.n_sample_points
+          l+= [Y1n,Y2n,Y3n,'','','']
+        else :
+          N1n = 0
+          for N1 in ga.N1peaks : N1n += N1.n_sample_points
+          C2n = 0
+          for C2 in ga.C2peaks : C2n += C2.n_sample_points
+          N3n = 0
+          for N3 in ga.N3peaks : N3n += N3.n_sample_points
+          l+= ['','','',N1n,C2n,N3n]
+        assert len(heads) == len(l)
+        print >> log, ','.join([str(e) for e in l])
+        #print >> log, ga.base.get_string_id()
+        #print >> log, len(ga.Y1peaks)
+        #print >> log, len(ga.Y2peaks)
+        #print >> log, len(ga.Y3peaks)
 
   # clean up files
   def clean_up_files(self,except_these=[]) :
@@ -487,7 +525,9 @@ class DiffDensityAroundBases(object) :
 
 class SimpleBaseClass(object) :
 
-  def __init__(self, chain_id, residue, altloc, resolution) :
+  def __init__(self, chain_id, residue, altloc, resolution, decoy_type="HG") :
+    assert decoy_type in ['HG','RY'], decoy_type
+    self.decoy_type = decoy_type
     self.chain_id   = chain_id
     self.res_num = residue.resseq
     self.atom_names = [atom.name.strip().upper() for atom in residue.atoms()]
@@ -543,18 +583,21 @@ class SimpleBaseClass(object) :
     #print self.get_string_id()
     rn = self.res_type.strip().upper()
     if rn in ['DA', 'DG'] :
-      base['C2'] = self.xyz.C2
-      base['N1'] = self.xyz.N1
-      base['C6'] = self.xyz.C6
-      # test_points is where we test for positive density when looking for 
-      # potential decoys. 
-      tp = box_base.get_test_points(base,rn,sample_spacing)
-      vars(self.xyz)['test_1'] = tp.point_1
-      vars(self.xyz)['test_2'] = tp.point_2
+      if self.decoy_type == "HG" :
+        base['C2'] = self.xyz.C2
+        base['N1'] = self.xyz.N1
+        base['C6'] = self.xyz.C6
+        # test_points is where we test for positive density when looking for 
+        # potential decoys. 
+        tp = box_base.get_test_points(base,rn,sample_spacing)
+        vars(self.xyz)['test_1'] = tp.point_1
+        vars(self.xyz)['test_2'] = tp.point_2
+      else :
+        base['N3'] = self.xyz.N3
     elif rn in ['DT', 'DC'] :
-      base['N3'] = self.xyz.C2
-      base['C4'] = self.xyz.N1
-      base['C5'] = self.xyz.C6
+      base['N3'] = self.xyz.N3
+      base['C4'] = self.xyz.C4
+      base['C5'] = self.xyz.C5
       tp = box_base.get_test_points(base,rn,sample_spacing)
       vars(self.xyz)['test_1'] = tp.point_1
       vars(self.xyz)['test_2'] = tp.point_2
@@ -563,9 +606,10 @@ class SimpleBaseClass(object) :
 
   def get_sample_points_kin_group(self,color='red') :
     gn = '%s %s' % (self.chain_id, self.residue.resseq)
-    return box_base.get_kin_balls(self.sample_points,
+    kin = box_base.get_kin_balls(self.sample_points,
                                   color=color,
                                   group_name=gn)
+    return kin
 
   def get_density_sample_points_kin_group(self,positive_threshold,
                                                negative_threshold) :
@@ -576,7 +620,7 @@ class SimpleBaseClass(object) :
     inb_color = 'white'
     neg_list, pos_list, inbetween = [], [], []
     for k,point in self.density_sample_points.sample_points.items() :
-      # print 'point.map_value : %.3f %s' % (point.map_value,  point.map_value > 2)
+      # print 'point.map_value: %.3f %s' % (point.map_value,point.map_value > 2)
       id = '%.3f %s %s %s' %(point.map_value,point.plane,point.column,point.row)
       kin_line = '{%s} P %.3f %.3f %.3f\n' % (id,point.xyz[0],
                                           point.xyz[1],point.xyz[2])
@@ -592,6 +636,10 @@ class SimpleBaseClass(object) :
     ib = '@balllist {inbetween} master= {inbetween} color= %s radius = 0.02\n'
     kin += ib % inb_color
     for kl in inbetween : kin += kl
+    ps = {('t','p','1'):self.xyz.test_1,('t','p','2'):self.xyz.test_2}
+    if self.is_pyrimidine() : ps[('t','p','3')] = self.xyz.test_3
+    gn = 'tests %s %s' % (self.chain_id,self.res_num)
+    kin += box_base.get_kin_balls(ps,color='red',group_name='tests',radius=0.08)
     return kin
 
   def get_peaks(self,positive_threshold, negative_threshold, count_threshold) :

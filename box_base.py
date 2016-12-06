@@ -336,9 +336,9 @@ def run(args) :
   # box_base(dc_base,'C')
 
   dt_base = {}
-  dt_base['N3'] = (-4.021,-12.752,-1.005)
-  dt_base['C4'] = (-3.701,-11.416,-1.202)
-  dt_base['C5'] = (-4.672,-10.475,-0.689)
+  dt_base['N3'] = (34.739,31.308,122.284)
+  dt_base['C4'] = (34.311,30.016,122.080)
+  dt_base['C5'] = (33.958,29.697,120.729)
   points = get_points_around_base(dt_base,'DT',1.9*0.25)
   print '@kinemage'
   print get_kin_balls(points,color='white')
@@ -348,6 +348,7 @@ def run(args) :
   #print ponit_line('point1',tp.point_1[0],tp.point_1[1],tp.point_1[2])
   #print ponit_line('point2',tp.point_2[0],tp.point_2[1],tp.point_2[2])
   #print ponit_line('point3',tp.point_3[0],tp.point_3[1],tp.point_3[2])
+  print tp.point_3
 
 if __name__ == '__main__' :
   run(sys.argv[1:])
