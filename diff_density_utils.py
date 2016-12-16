@@ -180,13 +180,13 @@ class GetMapCoeffs(refinement_base):
     print >> log, "-"*79
     print >> log, "Compute maps."
     file_name_base = params.maps.input.pdb_file_name
-    xplor_maps = mmtbx.maps.compute_xplor_maps(
-      fmodel                 = fmodel,
-      params                 = params.maps.map,
-      atom_selection_manager = atom_selection_manager,
-      file_name_prefix       = None,
-      file_name_base         = file_name_base,
-      pdb_hierarchy          = pdb_hierarchy)
+    #xplor_maps = mmtbx.maps.compute_xplor_maps(
+    #  fmodel                 = fmodel,
+    #  params                 = params.maps.map,
+    #  atom_selection_manager = atom_selection_manager,
+    #  file_name_prefix       = None,
+    #  file_name_base         = file_name_base,
+    #  pdb_hierarchy          = pdb_hierarchy)
     cmo = mmtbx.maps.compute_map_coefficients(
       fmodel = fmodel,
       params = params.maps.map_coefficients,
